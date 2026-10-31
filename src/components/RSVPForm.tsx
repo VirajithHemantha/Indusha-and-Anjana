@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Loader2, Heart, Sparkles } from 'lucide-react';
+import { submitToSheet, getGuestFromUrl } from '../config';
 
 export const RSVPForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -15,18 +16,12 @@ export const RSVPForm: React.FC = () => {
     setStatus('loading');
 
     try {
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyay20jbF63BRUj8JGGbUbYkYS3Us-DpLZc2Hs34si_qKJgxs_81xpNBniXsBNFsYOt7g/exec';
-      const payload = new FormData();
-      payload.append('sheet', 'RSVP');
-      payload.append('name', formData.fullName);
-      payload.append('guests', formData.guests);
-      payload.append('dietary', formData.dietaryNotes);
-      payload.append('attendance', 'Yes');
-
-      await fetch(scriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: payload,
+      await submitToSheet('RSVP', {
+        name: formData.fullName,
+        guests: formData.guests,
+        dietary: formData.dietaryNotes,
+        attendance: 'Yes',
+        invitedAs: getGuestFromUrl(),
       });
 
       setStatus('success');
@@ -161,6 +156,11 @@ export const RSVPForm: React.FC = () => {
                       'Confirm Attendance'
                     )}
                   </button>
+                  {status === 'error' && (
+                    <p className="text-center text-red-500/90 font-serif italic text-sm mt-4">
+                      Sorry, we couldn't send your response. Please try again or call us.
+                    </p>
+                  )}
                 </div>
               </motion.form>
             )}

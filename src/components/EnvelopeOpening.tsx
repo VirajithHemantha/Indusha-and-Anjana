@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { getGuestFromUrl } from "../config";
 
 export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () => void, onMusicStart?: () => void }) {
   const [opened, setOpened] = useState(false);
   
-  const params = new URLSearchParams(window.location.search);
-  const prefix = params.get('prefix');
-  const guestName = params.get('name');
+  const displayName = getGuestFromUrl();
 
   useEffect(() => {
     if (opened) {
@@ -412,7 +411,7 @@ export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () =
               </svg>
 
               <div className="text-eyebrow">
-                {guestName ? `Dear ${prefix} ${guestName},` : 'Promise of Love'}
+                {displayName ? `Dear ${displayName},` : 'Save the Date'}
               </div>
 
               <div className="divider">
@@ -422,9 +421,9 @@ export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () =
               </div>
 
               <h1 className="text-names">
-                Isuri
+                Indusha
                 <span className="text-ampersand">&</span>
-                &nbsp;Duvindu
+                &nbsp;Anjana
               </h1>
 
               <div className="divider">
@@ -434,10 +433,10 @@ export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () =
               </div>
 
               <div className="text-details">
-                Request the honour of your presence<br />
-                <span className="text-date">Tuesday 05 January 2027 At 09:00 AM</span>
-                <span className="text-church">Hilton Colombo</span><br />
-                Colombo
+                Request the honour of your presence at our Homecoming<br />
+                <span className="text-date">Sunday 06 December 2026 · 6.30 PM to 11.30 PM</span>
+                <span className="text-church">Hotel Sanara Mandira</span><br />
+                Ranasara Hall, Kiribathgoda
               </div>
             </div>
           </div>

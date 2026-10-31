@@ -1,63 +1,108 @@
+// @ts-nocheck
+// Google Apps Script for Indusha & Anjana's invitation.
+// Paste this whole file into Extensions > Apps Script (Code.gs) of the spreadsheet,
+// then deploy it as a Web App (see google-apps-script/SETUP.md).
+
+var SPREADSHEET_ID = '1yLuOjg_yEke48JMrlQ89EQvifk4V7ObFiuUrZ10nKeA';
+
+// Each sheet is created automatically with these headers on first use.
+var SHEETS = {
+  RSVP: {
+    headers: ['Timestamp', 'Full Name', 'Invited As', 'Guests', 'Attendance', 'Dietary Notes'],
+    widths: [170, 220, 220, 80, 110, 320],
+    row: function (p) {
+      return [new Date(), p.name || '', p.invitedAs || '', p.guests || '', p.attendance || '', p.dietary || ''];
+    },
+  },
+  Wishes: {
+    headers: ['Timestamp', 'Guest Name', 'Message'],
+    widths: [170, 220, 520],
+    row: function (p) {
+      return [new Date(), p.name || '', p.message || ''];
+    },
+  },
+};
+
+var HEADER_BACKGROUND = '#7B1E2B';
+var HEADER_TEXT = '#FFFFFF';
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  lock.waitLock(10000);
 
   try {
-    var doc = SpreadsheetApp.getActiveSpreadsheet();
-    // Get the sheet name from the request, default to 'Submissions'
-    var sheetName = e.parameter.sheet;
+    var payload = parsePayload_(e);
+    var sheetName = resolveSheetName_(payload.sheet);
+
     if (!sheetName) {
-      sheetName = "Submissions";
+      return jsonResponse_({ result: 'error', error: 'Invalid sheet. Use RSVP or Wishes.' });
     }
 
-    var sheet = doc.getSheetByName(sheetName);
+    var sheet = getOrCreateSheet_(sheetName);
+    sheet.appendRow(SHEETS[sheetName].row(payload));
 
-    // Auto-generate the sheet with proper headers if it doesn't exist
-    if (!sheet) {
-      sheet = doc.insertSheet(sheetName);
-      
-      if (sheetName === "RSVP") {
-        sheet.appendRow(["Timestamp", "Full Name", "Guests", "Dietary Notes", "Attendance"]);
-        sheet.getRange("A1:E1").setFontWeight("bold").setBackground("#f3f3f3");
-      } else if (sheetName === "Wishes") {
-        sheet.appendRow(["Timestamp", "Guest Name", "Message"]);
-        sheet.getRange("A1:C1").setFontWeight("bold").setBackground("#f3f3f3");
-      } else {
-        sheet.appendRow(["Timestamp", "Data"]);
-      }
-      
-      // Freeze the header row
-      sheet.setFrozenRows(1);
-    }
-
-    // Prepare the row data based on the sheet destination
-    var row = [new Date()]; // First column is always Timestamp
-
-    if (sheetName === "RSVP") {
-      row.push(e.parameter.name || "");
-      row.push(e.parameter.guests || "");
-      row.push(e.parameter.dietary || "");
-      row.push(e.parameter.attendance || "");
-    } else if (sheetName === "Wishes") {
-      row.push(e.parameter.name || "");
-      row.push(e.parameter.message || "");
-    } else {
-      row.push(JSON.stringify(e.parameter));
-    }
-
-    // Append the row to the chosen sheet
-    sheet.appendRow(row);
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ "result": "success", "row": sheet.getLastRow() }))
-      .setMimeType(ContentService.MimeType.JSON);
-
+    return jsonResponse_({ result: 'success', sheet: sheetName, row: sheet.getLastRow() });
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ "result": "error", "error": error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-
+    return jsonResponse_({ result: 'error', error: String(error && error.message ? error.message : error) });
   } finally {
     lock.releaseLock();
   }
+}
+
+function doGet() {
+  return jsonResponse_({ result: 'success', message: 'Indusha & Anjana invitation endpoint is running.' });
+}
+
+// Run once from the Apps Script editor to create both sheets up front (optional).
+function setup() {
+  Object.keys(SHEETS).forEach(getOrCreateSheet_);
+}
+
+function resolveSheetName_(value) {
+  var key = String(value || '').trim().toUpperCase();
+  if (key === 'RSVP') return 'RSVP';
+  if (key === 'WISHES' || key === 'WISH') return 'Wishes';
+  return null;
+}
+
+function getOrCreateSheet_(name) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
+
+  if (sheet.getLastRow() === 0) {
+    var config = SHEETS[name];
+    var header = sheet.getRange(1, 1, 1, config.headers.length);
+
+    header.setValues([config.headers])
+      .setFontWeight('bold')
+      .setBackground(HEADER_BACKGROUND)
+      .setFontColor(HEADER_TEXT)
+      .setHorizontalAlignment('center');
+    sheet.setFrozenRows(1);
+    config.widths.forEach(function (width, i) {
+      sheet.setColumnWidth(i + 1, width);
+    });
+  }
+
+  return sheet;
+}
+
+function parsePayload_(e) {
+  var params = e && e.parameter ? e.parameter : {};
+  if (Object.keys(params).length > 0) return params;
+
+  var contents = e && e.postData && e.postData.contents ? e.postData.contents : '';
+  if (!contents) return {};
+
+  try {
+    return JSON.parse(contents);
+  } catch (_error) {
+    return {};
+  }
+}
+
+function jsonResponse_(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }
