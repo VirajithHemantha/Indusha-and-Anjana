@@ -9,10 +9,7 @@
 7. Execute as: Me.
 8. Who has access: Anyone.
 9. Deploy, approve the permissions, and copy the Web App URL (ends with `/exec`).
-10. Give the URL to the website, either:
-    - in Vercel: Project Settings > Environment Variables > `VITE_GOOGLE_APPS_SCRIPT_URL` = the URL, then redeploy, or
-    - locally: create `.env` in the project root with `VITE_GOOGLE_APPS_SCRIPT_URL=YOUR_WEB_APP_URL` and restart Vite, or
-    - paste it directly into `GOOGLE_SCRIPT_URL` in `src/config.ts`.
+10. Paste the URL into `GOOGLE_SCRIPT_URL` in `src/config.ts`, then commit and push.
 
 Notes:
 - If you change the Apps Script code later, use Deploy > Manage deployments > Edit > New version.

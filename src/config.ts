@@ -2,9 +2,8 @@ export const BRIDE_NAME = 'Indusha';
 export const GROOM_NAME = 'Anjana';
 
 // Google Apps Script Web App URL (see google-apps-script/SETUP.md).
-// Set VITE_GOOGLE_APPS_SCRIPT_URL in .env / Vercel, or paste the URL here.
 export const GOOGLE_SCRIPT_URL =
-  import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL || 'PASTE_YOUR_WEB_APP_URL_HERE';
+  'https://script.google.com/macros/s/AKfycbyn3-OUZhjBhgs1Dai7JOLWDdNm8Dwd0JXlWswYVHJpZNTjxpbYTdPp0GPmwH_zrBjlwQ/exec';
 
 export async function submitToSheet(sheet: 'RSVP' | 'Wishes', fields: Record<string, string>) {
   if (!GOOGLE_SCRIPT_URL.startsWith('https://script.google.com/')) {
